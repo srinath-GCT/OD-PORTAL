@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+background:#f3f4f6;
+}
+
+.container{
+width:360px;
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+h2{
+text-align:center;
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+.nav{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+}
+
+.days{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+font-weight:bold;
+text-align:center;
+}
+
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:5px;
+}
+
+.day{
+background:#eee;
+padding:10px;
+text-align:center;
+border-radius:6px;
+cursor:pointer;
+}
+
+.selected{
+background:#4a74e0;
+color:white;
+}
+
+.selectedList{
+background:#fafafa;
+padding:10px;
+border-radius:8px;
+font-size:14px;
+max-height:120px;
+overflow:auto;
+margin-bottom:10px;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:8px;
+background:#4a74e0;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+.upload{
+display:block;
+text-align:center;
+background:#2c8f4a;
+color:white;
+padding:10px;
+border-radius:8px;
+text-decoration:none;
+margin-bottom:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>GCT EEE Batch 27 OD</h2>
+
+<label>Name</label>
+<input id="name">
+
+<label>Roll Number</label>
+<input id="roll">
+
+<label>OD Type</label>
+<select id="odType">
+<option>Full Day</option>
+<option>Morning Only</option>
+<option>Afternoon Only</option>
+</select>
+
+<div class="nav">
+<button onclick="changeMonth(-1)">◀</button>
+<h3 id="monthYear"></h3>
+<button onclick="changeMonth(1)">▶</button>
+</div>
+
+<div class="days">
+<div>Sun</div>
+<div>Mon</div>
+<div>Tue</div>
+<div>Wed</div>
+<div>Thu</div>
+<div>Fri</div>
+<div>Sat</div>
+</div>
+
+<div id="calendar" class="calendar"></div>
+
+<p><b>Selected OD Days:</b> <span id="count">0</span></p>
+
+<div id="selectedList" class="selectedList"></div>
+
+<a class="upload"
+href="https://drive.google.com/drive/folders/1N7yIyHsn7vCSbmtetc5ALXKo-Zopyf0R"
+target="_blank">
+Upload OD Proof
+</a>
+
+<label>Paste Drive Link</label>
+<input id="drive">
+
+<button onclick="submitForm()">Submit OD</button>
+
+</div>
+
+<script>
+
+let date = new Date();
+let selectedDates = {};
+
+function renderCalendar(){
+
+let year = date.getFullYear();
+let month = date.getMonth();
+
+const months = [
+"January","February","March","April","May","June",
+"July","August","September","October","November","December"
+];
+
+document.getElementById("monthYear").innerText =
+months[month] + " " + year;
+
+let firstDay = new Date(year,month,1).getDay();
+let lastDate = new Date(year,month+1,0).getDate();
+
+let cal=document.getElementById("calendar");
+cal.innerHTML="";
+
+for(let i=0;i<firstDay;i++){
+let blank=document.createElement("div");
+cal.appendChild(blank);
+}
+
+for(let day=1;day<=lastDate;day++){
+
+let div=document.createElement("div");
+div.className="day";
+div.innerText=day;
+
+let key=year+"-"+month+"-"+day;
+
+if(selectedDates[key]){
+div.classList.add("selected");
+}
+
+div.onclick=function(){
+
+let type=document.getElementById("odType").value;
+
+if(selectedDates[key]){
+delete selectedDates[key];
+div.classList.remove("selected");
+}
+else{
+selectedDates[key]=type;
+div.classList.add("selected");
+}
+
+updateList();
+
+};
+
+cal.appendChild(div);
+
+}
+
+}
+
+function changeMonth(step){
+date.setMonth(date.getMonth()+step);
+renderCalendar();
+}
+
+function updateList(){
+
+let list=document.getElementById("selectedList");
+list.innerHTML="";
+
+let count=0;
+let text="";
+
+for(let key in selectedDates){
+
+count++;
+
+let parts=key.split("-");
+let d=new Date(parts[0],parts[1],parts[2]);
+
+let line=d.toDateString()+" ("+selectedDates[key]+")";
+
+let div=document.createElement("div");
+div.innerText=line;
+
+list.appendChild(div);
+
+text+=line+"\n";
+
+}
+
+document.getElementById("count").innerText=count;
+window.odDetails=text;
+
+}
+
+function submitForm(){
+
+let name=document.getElementById("name").value;
+let roll=document.getElementById("roll").value;
+let drive=document.getElementById("drive").value;
+
+if(!name || !roll || !window.odDetails || !drive){
+alert("Fill all fields");
+return;
+}
+
+google.script.run
+.withSuccessHandler(function(res){
+
+if(res=="already"){
+alert("Roll number already submitted");
+}
+else{
+alert("OD Submitted Successfully");
+location.reload();
+}
+
+})
+.submitData(name,roll,window.odDetails,drive);
+
+}
+
+renderCalendar();
+
+</script>
+
+</body>
+</html>
