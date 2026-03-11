@@ -1,0 +1,33 @@
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('index')
+  .setTitle("GCT EEE Batch 27 OD Portal");
+}
+
+function submitData(name, roll, details, drive) {
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");
+
+  var lastRow = sheet.getLastRow();
+
+  if(lastRow > 1){
+
+    var rolls = sheet.getRange(2,2,lastRow-1,1).getValues();
+
+    for(var i=0;i<rolls.length;i++){
+      if(rolls[i][0] == roll){
+        return "already";
+      }
+    }
+
+  }
+
+  sheet.appendRow([
+    name,
+    roll,
+    details,
+    drive,
+    new Date()
+  ]);
+
+  return "success";
+}
